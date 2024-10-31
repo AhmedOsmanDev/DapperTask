@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace DapperTask.Models;
 
-public class AppUser
+public class User
 {
     [Key]
     public Guid Id { get; set; }

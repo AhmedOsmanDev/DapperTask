@@ -2,7 +2,7 @@ CREATE DATABASE [DapperTask];
 
 USE [DapperTask];
 
-CREATE TABLE [AppUser]
+CREATE TABLE [User]
 (
     [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
     [Email] VARCHAR(100) NOT NULL,
@@ -14,9 +14,10 @@ CREATE TABLE [Order]
 (
     [Id] INT IDENTITY(1,1) PRIMARY KEY,
     [ItemCount] INT NOT NULL,
+    [TotalPrice] MONEY NOT NULL,
     [InsertDate] DATETIME NULL,
     [UserId] UNIQUEIDENTIFIER NOT NULL,
-    CONSTRAINT [FK_Order_AppUser] FOREIGN KEY ([UserId]) REFERENCES [AppUser]([Id])
+    CONSTRAINT [FK_Order_AppUser] FOREIGN KEY ([UserId]) REFERENCES [User]([Id])
 );
 
 CREATE TABLE [OrderDetail]
@@ -28,52 +29,33 @@ CREATE TABLE [OrderDetail]
     [TotalPrice] AS ([Quantity] * [Price]) PERSISTED,
     [InsertDate] DATETIME NULL,
     [OrderId] INT NOT NULL,
-    CONSTRAINT [FK_OrderDetail_Order] FOREIGN KEY ([OrderId]) REFERENCES [Order]([Id])
+    CONSTRAINT [FK_OrderDetail_Order] FOREIGN KEY ([OrderId]) REFERENCES [Order]([Id]) ON DELETE CASCADE
 );
 
--- ALTER TABLE [Order] ADD [TotalPrice] AS (SELECT SUM([TotalPrice]) FROM [OrderDetail] WHERE [OrderDetail].[OrderId] = [Orders].[Id]) PERSISTED;
+CREATE TRIGGER [TRG_UpdateOrderTotalPriceAfterInsert]
+    ON [OrderDetail]
+    AFTER INSERT
+    AS
+    UPDATE [Order]
+    SET [TotalPrice] = (SELECT SUM([TotalPrice]) FROM [OrderDetail] WHERE [OrderId] = [Order].[Id])
+    FROM [Order]
+    WHERE [Order].[Id] IN (SELECT DISTINCT [OrderId] FROM [INSERTED]);
 
--- -- Trigger to update TotalPrice after insert
--- CREATE TRIGGER trg_UpdateOrderTotalPriceAfterInsert
--- ON [OrderDetail]
--- AFTER INSERT
--- AS
--- BEGIN
---     SET NOCOUNT ON;
---     UPDATE o
---     SET TotalPrice = (SELECT SUM(TotalPrice)
---     FROM [OrderDetail]
---     WHERE OrderId = o.Id)
---     FROM [Order] o
---         JOIN inserted i ON o.Id = i.OrderId;
--- END;
+CREATE TRIGGER [TRG_UpdateOrderTotalPriceAfterUpdate]
+    ON [OrderDetail]
+    AFTER UPDATE
+    AS
+    UPDATE [Order]
+    SET [TotalPrice] = [TotalPrice] - ISNULL((SELECT SUM([TotalPrice]) FROM [DELETED] WHERE [OrderId] = [Order].[Id]), 0)
+        + ISNULL((SELECT SUM([TotalPrice]) FROM [INSERTED] WHERE [OrderId] = [Order].[Id]), 0)
+    FROM [Order]
+    WHERE [Order].[Id] IN (SELECT DISTINCT [OrderId] FROM [INSERTED]);
 
--- -- Trigger to update TotalPrice after update
--- CREATE TRIGGER trg_UpdateOrderTotalPriceAfterUpdate
--- ON [OrderDetail]
--- AFTER UPDATE
--- AS
--- BEGIN
---     SET NOCOUNT ON;
---     UPDATE o
---     SET TotalPrice = (SELECT SUM(TotalPrice)
---     FROM [OrderDetail]
---     WHERE OrderId = o.Id)
---     FROM [Order] o
---         JOIN inserted i ON o.Id = i.OrderId;
--- END;
-
--- -- Trigger to update TotalPrice after delete
--- CREATE TRIGGER trg_UpdateOrderTotalPriceAfterDelete
--- ON [OrderDetail]
--- AFTER DELETE
--- AS
--- BEGIN
---     SET NOCOUNT ON;
---     UPDATE o
---     SET TotalPrice = (SELECT SUM(TotalPrice)
---     FROM [OrderDetail]
---     WHERE OrderId = o.Id)
---     FROM [Order] o
---         JOIN deleted d ON o.Id = d.OrderId;
--- END;
+CREATE TRIGGER [TRG_UpdateOrderTotalPriceAfterDelete]
+    ON [OrderDetail]
+    AFTER DELETE
+    AS
+    UPDATE [Order]
+    SET [TotalPrice] = [TotalPrice] - ISNULL((SELECT SUM([TotalPrice]) FROM [DELETED] WHERE [OrderId] = [Order].[Id]), 0)
+    FROM [Order]
+    WHERE [Order].[Id] IN (SELECT DISTINCT [OrderId] FROM [DELETED]);
