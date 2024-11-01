@@ -21,6 +21,9 @@ APIs :-
 - delete Order with orderDetails list
 
 Note :-   project structure (Repository Pattern)
+
 Note :-   Don't forget comments.
+
 Note :-   Don't forget sql script for database creation
+
 Note :-   work on sql server
