@@ -14,10 +14,10 @@ CREATE TABLE [Order]
 (
     [Id] INT IDENTITY(1,1) PRIMARY KEY,
     [ItemCount] INT NOT NULL,
-    [TotalPrice] MONEY NOT NULL,
+    [TotalPrice] FLOAT NOT NULL,
     [InsertDate] DATETIME NULL,
     [UserId] UNIQUEIDENTIFIER NOT NULL,
-    CONSTRAINT [FK_Order_AppUser] FOREIGN KEY ([UserId]) REFERENCES [User]([Id])
+    CONSTRAINT [FK_Order_User] FOREIGN KEY ([UserId]) REFERENCES [User]([Id])
 );
 
 CREATE TABLE [OrderDetail]
@@ -25,7 +25,7 @@ CREATE TABLE [OrderDetail]
     [Id] INT IDENTITY(1,1) PRIMARY KEY,
     [Name] NVARCHAR(255) NOT NULL,
     [Quantity] INT NOT NULL,
-    [Price] MONEY NOT NULL,
+    [Price] FLOAT NOT NULL,
     [TotalPrice] AS ([Quantity] * [Price]) PERSISTED,
     [InsertDate] DATETIME NULL,
     [OrderId] INT NOT NULL,
