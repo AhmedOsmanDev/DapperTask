@@ -27,3 +27,11 @@ Note :-   Don't forget comments.
 Note :-   Don't forget sql script for database creation
 
 Note :-   work on sql server
+
+1. Code Quality and Review
+   "Can you provide a code quality summary for the latest build?"
+   "List any new bugs or vulnerabilities found in the last code scan."
+   "Can you summarize the results of the recent code review process?"
+2. Performance Check
+   "Summarize any performance anomalies detected recently."
+   "List all current performance issues with severity levels."
